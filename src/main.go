@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"fmt"
+	"strconv"
 )
 
 type Authentication struct {
@@ -25,11 +26,11 @@ type Response struct {
 }
 
 var auths = []Authentication{
-	{ID:1, Key: "Basic"}
+	{Id:1, Key: "Basic"},
 }
 
 var answers = []Response{
-	{ID:1, "hello ans"}
+	{Id:1, Body: "hello ans", StatusCode: 200},
 }
 
 func init() {
@@ -51,12 +52,17 @@ func main() {
 }
 
 func greeting(c *gin.Context) {
-	authId := c.Query("authId")
-	answerId := c.Query("answerId")
+	authId, authErr := strconv.Atoi(c.Query("authId"))
+	answerId, ansErr := strconv.Atoi(c.Query("answerId"))
+
+	if authErr != nil || ansErr != nil {
+		c.IndentedJSON(http.StatusBadRequest, "bad request")
+	}
+
 	fmt.Println(authId)
 
 	for _, res := range answers {
-        if res.ID == answerId {
+        if res.Id == answerId {
             c.IndentedJSON(http.StatusOK, res)
             return
         }
