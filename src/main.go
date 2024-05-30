@@ -9,29 +9,42 @@ import (
 	"strconv"
 )
 
+type AuthenticationMethod interface {
+
+}
+
 type Authentication struct {
 	Id int
 	Key string
+	Method AuthenticationMethod
 }
 
 type Request struct {
 	Id int
 	Body string
+	Headers []string
 }
 
 type Response struct {
 	Id int
+	Key string
 	Body string
 	StatusCode int
 }
 
-var auths = []Authentication{
-	{Id:1, Key: "Basic"},
+type Endpoint struct {
+	Id int
+	Key string
+	Auth AuthenticationMethod
+	DefaultResponse Response 
+	Requests []Request
+	Origin string
+	Received string
 }
 
-var answers = []Response{
-	{Id:1, Body: "hello ans", StatusCode: 200},
-}
+
+var auths = []Authentication{}
+var answers = []Response{}
 
 func init() {
 	godotenv.Load()
