@@ -23,6 +23,7 @@ type Request struct {
 	Id int
 	Body string
 	Headers []string
+	Method string
 }
 
 type Response struct {
