@@ -9,38 +9,38 @@ import (
 	"strconv"
 )
 
-type AuthenticationMethod interface {
+type AuthenticationTyper interface {
 
 }
 
 type Authentication struct {
-	Id int
-	Key string
-	Method AuthenticationMethod
+	id int
+	key string
+	method AuthenticationTyper
 }
 
 type Request struct {
-	Id int
-	Body string
-	Headers []string
-	Method string
+	id int
+	body string
+	headers []string
+	method string
 }
 
 type Response struct {
-	Id int
-	Key string
-	Body string
-	StatusCode int
+	id int
+	key string
+	body string
+	statusCode int
 }
 
 type Endpoint struct {
-	Id int
-	Key string
-	Auth AuthenticationMethod
-	DefaultResponse Response 
-	Requests []Request
-	Origin string
-	Received string
+	id int
+	key string
+	auth AuthenticationTyper
+	defaultResponse Response 
+	requests []Request
+	origin string
+	received string
 }
 
 
