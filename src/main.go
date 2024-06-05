@@ -7,7 +7,13 @@ import (
 	"github.com/joho/godotenv"
 	"fmt"
 	"strconv"
+	"time"
+	"github.com/gocql/gocql"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
+
+
 
 type Authentication struct {
 	Id int
@@ -38,17 +44,8 @@ func init() {
 }
 
 func main() {
-	port := os.Getenv("PORT")
-
-	if port == "" {
-		port = "8080"
-	}
-
-	router := gin.Default()
-	router.GET("/echo", greeting)
-	router.POST("/echo", greetingPost)
-
-	router.Run("localhost:" + port)
+	createDatabaseConnection()
+	initWebServer()
 }
 
 func greeting(c *gin.Context) {
@@ -73,4 +70,67 @@ func greeting(c *gin.Context) {
 
 func greetingPost(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "post message"})
+}
+
+func createDatabaseConnection() {
+	logger := createLogger("info")
+	keyspace := os.Getenv("KEYSPACE")
+	if keyspace == "" {
+		keyspace = "poa"
+	}
+
+	cluster      := createCluster(gocql.Quorum, keyspace, "localhost")
+	session, err := gocql.NewSession(*cluster)
+
+	if err != nil {
+		logger.Fatal("Unable to connect to scylla", zap.Error(err))
+		return
+	}
+
+	session.Query("SELECT * FROM TEST")
+}
+
+func initWebServer() {
+	port     := os.Getenv("PORT")	
+
+	if port == "" {
+		port = "8080"
+	}
+
+	router := gin.Default()
+	initRoutes(router)
+	router.Run("localhost:" + port)
+}
+
+func initRoutes(router *gin.Engine) {
+	router.GET("/echo", greeting)
+	router.POST("/echo", greetingPost)
+}
+
+func createCluster(consistency gocql.Consistency, keyspace string, hosts ...string) *gocql.ClusterConfig {
+	cluster := gocql.NewCluster(hosts...)
+	cluster.Keyspace = keyspace
+	cluster.Timeout = 5 * time.Second
+	cluster.RetryPolicy = &gocql.ExponentialBackoffRetryPolicy{
+		Min: 		time.Second,
+		Max:        10 * time.Second,
+		NumRetries: 5,
+	}
+	cluster.Consistency = consistency
+	cluster.PoolConfig.HostSelectionPolicy = gocql.TokenAwareHostPolicy(gocql.RoundRobinHostPolicy())
+	return cluster
+}
+
+func createLogger(level string) *zap.Logger {
+	lvl := zap.NewAtomicLevel()
+	if err := lvl.UnmarshalText([]byte(level)); err != nil {
+		lvl.SetLevel(zap.InfoLevel)
+	}
+	encoderCfg := zap.NewDevelopmentEncoderConfig()
+	logger := zap.New(zapcore.NewCore(
+		zapcore.NewConsoleEncoder(encoderCfg),
+		zapcore.Lock(os.Stdout),
+		lvl,
+	))
+	return logger
 }
