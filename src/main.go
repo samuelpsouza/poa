@@ -72,7 +72,7 @@ func greetingPost(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "post message"})
 }
 
-func createDatabaseConnection() {
+func createDatabaseConnection() *gocql.Session {
 	logger := createLogger("info")
 	keyspace := os.Getenv("KEYSPACE")
 	if keyspace == "" {
@@ -87,7 +87,7 @@ func createDatabaseConnection() {
 		return
 	}
 
-	session.Query("SELECT * FROM TEST")
+	return session
 }
 
 func initWebServer() {
