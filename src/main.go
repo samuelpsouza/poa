@@ -5,33 +5,9 @@ import (
 	"net/http"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"fmt"
 	"strconv"
+	"dev.ssouza/rest-api/service"
 )
-
-type Authentication struct {
-	Id int
-	Key string
-}
-
-type Request struct {
-	Id int
-	Body string
-}
-
-type Response struct {
-	Id int
-	Body string
-	StatusCode int
-}
-
-var auths = []Authentication{
-	{Id:1, Key: "Basic"},
-}
-
-var answers = []Response{
-	{Id:1, Body: "hello ans", StatusCode: 200},
-}
 
 func init() {
 	godotenv.Load()
@@ -52,23 +28,14 @@ func main() {
 }
 
 func greeting(c *gin.Context) {
-	authId, authErr := strconv.Atoi(c.Query("authId"))
-	answerId, ansErr := strconv.Atoi(c.Query("answerId"))
+	_, authErr := strconv.Atoi(c.Query("authId"))
+	_, ansErr := strconv.Atoi(c.Query("answerId"))
 
 	if authErr != nil || ansErr != nil {
 		c.IndentedJSON(http.StatusBadRequest, "bad request")
 	}
 
-	fmt.Println(authId)
-
-	for _, res := range answers {
-        if res.Id == answerId {
-            c.IndentedJSON(http.StatusOK, res)
-            return
-        }
-    }
-
-	c.IndentedJSON(http.StatusOK, gin.H{"message": "answer not found"})
+	c.IndentedJSON(http.StatusOK, service.CreatEndpoint())
 }
 
 func greetingPost(c *gin.Context) {
